@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JLPT N5 Vocabulary Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            /* Dark theme background */
+            background-color: #1a202c; /* gray-900 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .quiz-container {
+            /* Dark theme container */
+            background-color: #2d3748; /* gray-800 */
+            border-radius: 1.5rem; /* Rounded corners */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3); /* Darker shadow */
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .question-area-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .question-text {
+            font-size: 2.25rem; /* text-4xl */
+            font-weight: 700; /* font-bold */
+            /* Dark theme text color */
+            color: #f7fafc; /* white */
+            margin: 0; /* Reset margin */
+        }
+        .read-button {
+            background-color: #63b3ed; /* Blue-300 */
+            color: #ffffff;
+            /* Use flexbox for centering and let padding define size around the icon */
+            padding: 0.6rem; /* Slightly reduced padding to ensure better fit for icon */
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex; /* Make it a flex container */
+            align-items: center; /* Center vertically */
+            justify-content: center; /* Center horizontally */
+            /* Remove fixed width/height here, let content + padding define it */
+        }
+        .read-button:hover {
+            background-color: #4299e1; /* Blue-500 */
+        }
+        .read-button svg {
+            width: 24px; /* Explicit width for SVG */
+            height: 24px; /* Explicit height for SVG */
+            /* No margin/padding on SVG itself */
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .option-button {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem; /* rounded-xl */
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            /* Dark theme option button */
+            background-color: #4a5568; /* gray-700 */
+            color: #e2e8f0; /* light gray text */
+            border: 2px solid #6b7280; /* gray-600 border */
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            text-align: left;
+        }
+        .option-button:hover:not(.correct):not(.incorrect):not(:disabled) {
+            background-color: #6b7280; /* Darker gray on hover */
+            border-color: #9ca3af; /* Lighter border on hover */
+        }
+        .option-button.correct {
+            background-color: #38a169; /* Green-600 */
+            border-color: #2f855a; /* Green-700 */
+            color: #ffffff; /* White text */
+        }
+        .option-button.incorrect {
+            background-color: #e53e3e; /* Red-600 */
+            border-color: #c53030; /* Red-700 */
+            color: #ffffff; /* White text */
+        }
+        .option-button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6; /* Slightly more opaque for dark theme */
+        }
+        .feedback-message {
+            font-size: 1.25rem; /* text-xl */
+            font-weight: 600;
+            margin-top: -0.5rem;
+            min-height: 30px; /* To prevent layout shift */
+            color: #cbd5e0; /* Light gray for feedback */
+        }
+        .control-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .control-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .control-button.primary {
+            background-color: #4299e1; /* Blue-500 */
+            color: #ffffff;
+            border: none;
+        }
+        .control-button.primary:hover:not(:disabled) {
+            background-color: #3182ce; /* Blue-600 */
+        }
+        .control-button.secondary {
+            background-color: #718096; /* Gray-600 */
+            color: #ffffff;
+            border: none;
+        }
+        .control-button.secondary:hover:not(:disabled) {
+            background-color: #5f6b7d; /* Gray-700 */
+        }
+        .score-display {
+            font-size: 1.125rem;
+            font-weight: 600;
+            /* Dark theme score display */
+            color: #cbd5e0; /* light gray */
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Darker overlay */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            /* Dark theme modal content */
+            background-color: #2d3748; /* gray-800 */
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4); /* Darker shadow */
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        .modal-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            /* Dark theme modal title */
+            color: #f7fafc; /* white */
+        }
+        .modal-message {
+            font-size: 1.125rem;
+            /* Dark theme modal message */
+            color: #e2e8f0; /* light gray */
+        }
+        .modal-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            background-color: #4299e1;
+            color: #ffffff;
+            border: none;
+            transition: background-color 0.2s ease-in-out;
+        }
+        .modal-button:hover {
+            background-color: #3182ce;
+        }
+        .voice-toggle-button {
+            background-color: #9f7aea; /* Purple-400 */
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 1rem; /* Add margin to separate from other buttons */
+        }
+        .voice-toggle-button:hover {
+            background-color: #805ad5; /* Purple-500 */
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 640px) {
+            .options-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <!-- Removed H1 title -->
+        <div id="question-area">
+            <div class="question-area-header">
+                <div class="question-text" id="japanese-word"></div>
+                <button id="read-word-button" class="read-button">
+                    <!-- Improved SVG icon for better visibility and centering -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-volume-2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                        <path d="M23.31 2.69a16 16 0 0 1 0 18.62"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="options-grid" id="options-container">
+                <!-- Options will be dynamically loaded here -->
+            </div>
+            <div class="feedback-message" id="feedback"></div>
+        </div>
+        <div class="score-display" id="score-display">Score: 0 / 0</div>
+        <div class="control-buttons">
+            <button id="next-button" class="control-button primary" disabled>Next Question</button>
+            <button id="restart-button" class="control-button secondary">Restart Quiz</button>
+        </div>
+        <!-- Voice toggle button instead of select dropdown -->
+        <button id="toggle-voice-button" class="voice-toggle-button">Switch Voice (Nanami)</button>
+    </div>
+
+    <div id="message-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 class="modal-title" id="modal-title"></h3>
+            <p class="modal-message" id="modal-message"></p>
+            <button class="modal-button" id="modal-close-button">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // Vocabulary data manually extracted and cleaned from the PDF snippet
+        const vocabularyData = [
+            { japaneseWord: "~えき", kanji: "~駅", englishMeaning: "station" },
+            { japaneseWord: "~えん", kanji: "~円", englishMeaning: "... yen" },
+            { japaneseWord: "~かい", kanji: "", englishMeaning: "floor" },
+            { japaneseWord: "~かい", kanji: "", englishMeaning: "times" },
+            { japaneseWord: "~かかん", kanji: "~日間", englishMeaning: "for... day(s)" },
+            { japaneseWord: "~かげつ", kanji: "~か月", englishMeaning: "(for).... month(s)" },
+            { japaneseWord: "~かた", kanji: "", englishMeaning: "how to ..." },
+            { japaneseWord: "~がつ", kanji: "~月", englishMeaning: "... month" },
+            { japaneseWord: "~がります", kanji: "", englishMeaning: "(third person) wants to..." },
+            { japaneseWord: "~がわ", kanji: "", englishMeaning: "side" },
+            { japaneseWord: "~キロ", kanji: "", englishMeaning: "... kg" },
+            { japaneseWord: "~キロ", kanji: "", englishMeaning: "km" },
+            { japaneseWord: "~くらいぐらい", kanji: "", englishMeaning: "about" },
+            { japaneseWord: "~グラム", kanji: "", englishMeaning: "... gram" },
+            { japaneseWord: "~こ", kanji: "", englishMeaning: "counter for small object" },
+            { japaneseWord: "~ご", kanji: "~語", englishMeaning: "... language" },
+            { japaneseWord: "~ごろ", kanji: "", englishMeaning: "around... (for time)" },
+            { japaneseWord: "~さい", kanji: "", englishMeaning: "... year(s) old" },
+            { japaneseWord: "~さつ", kanji: "", englishMeaning: "counter for book" },
+            { japaneseWord: "~さん", kanji: "", englishMeaning: "Mr., Mrs., Miss" },
+            { japaneseWord: "~じ", kanji: "~時", englishMeaning: "... o'clock" },
+            { japaneseWord: "~じかん", kanji: "~時間", englishMeaning: "hour(s)" },
+            { japaneseWord: "あいます", kanji: "会います", englishMeaning: "see (a person), meet" },
+            { japaneseWord: "あおい", kanji: "", englishMeaning: "blue [i-adj.]" },
+            { japaneseWord: "あか", kanji: "赤", englishMeaning: "red [noun]" },
+            { japaneseWord: "あかい", kanji: "赤い", englishMeaning: "red [i-adj.]" },
+            { japaneseWord: "あがります", kanji: "", englishMeaning: "go up" },
+            { japaneseWord: "あかるい", kanji: "", englishMeaning: "bright, light [i-adj.]" },
+            { japaneseWord: "あき", kanji: "", englishMeaning: "autumn, fall" },
+            { japaneseWord: "あきます", kanji: "", englishMeaning: "open" },
+            { japaneseWord: "あけます", kanji: "", englishMeaning: "open" },
+            { japaneseWord: "あげます", kanji: "", englishMeaning: "give" },
+            { japaneseWord: "あさ", kanji: "朝", englishMeaning: "morning" },
+            { japaneseWord: "あさごはん", kanji: "朝ごはん", englishMeaning: "breakfast" },
+            { japaneseWord: "あさって", kanji: "", englishMeaning: "the day after tomorrow" },
+            { japaneseWord: "あし", kanji: "足", englishMeaning: "leg, foot" },
+            { japaneseWord: "あした", kanji: "", englishMeaning: "tomorrow" },
+            { japaneseWord: "あそこ", kanji: "", englishMeaning: "over there" },
+            { japaneseWord: "あそびます", kanji: "", englishMeaning: "play" },
+            { japaneseWord: "あたたかい", kanji: "", englishMeaning: "warm [i-adj.]" },
+            { japaneseWord: "あたま", kanji: "", englishMeaning: "head" },
+            { japaneseWord: "あたらしい", kanji: "新しい", englishMeaning: "new [i-adj.]" },
+            { japaneseWord: "あちら", kanji: "", englishMeaning: "over there" },
+            { japaneseWord: "あつい", kanji: "", englishMeaning: "hot [i-adj.]" },
+            { japaneseWord: "あつい", kanji: "", englishMeaning: "thick [i-adj.]" },
+            { japaneseWord: "あと(で)", kanji: "後(で)", englishMeaning: "after" },
+            { japaneseWord: "あに", kanji: "", englishMeaning: "(my) older brother" },
+            { japaneseWord: "あね", kanji: "", englishMeaning: "(my) older sister" },
+            { japaneseWord: "あの~", kanji: "", englishMeaning: "that ..." },
+            { japaneseWord: "アパート", kanji: "", englishMeaning: "apartment" },
+            { japaneseWord: "あびます", kanji: "", englishMeaning: "take (a shower)" },
+            { japaneseWord: "あぶない", kanji: "", englishMeaning: "dangerous [i-adj.]" },
+            { japaneseWord: "あまい", kanji: "", englishMeaning: "sweet [i-adj.]" },
+            { japaneseWord: "あまり", kanji: "", englishMeaning: "not much" },
+            { japaneseWord: "あめ", kanji: "雨", englishMeaning: "rain" },
+            { japaneseWord: "アメリカ", kanji: "", englishMeaning: "The United States of America" },
+            { japaneseWord: "あらいます", kanji: "", englishMeaning: "wash" },
+            { japaneseWord: "あります", kanji: "", englishMeaning: "be [existence]" },
+            { japaneseWord: "あります", kanji: "", englishMeaning: "have [possession]" },
+            { japaneseWord: "あるきます", kanji: "歩きます", englishMeaning: "walk" },
+            { japaneseWord: "あれ", kanji: "", englishMeaning: "that (one)" },
+            { japaneseWord: "いい", kanji: "", englishMeaning: "good [i-adj.]" },
+            { japaneseWord: "いいます", kanji: "言います", englishMeaning: "say, tell" },
+            { japaneseWord: "いえ", kanji: "家", englishMeaning: "house" },
+            { japaneseWord: "いきます", kanji: "行きます", englishMeaning: "go" },
+            { japaneseWord: "いくつ", kanji: "", englishMeaning: "how many, how old" },
+            { japaneseWord: "いくら", kanji: "", englishMeaning: "how much" },
+            { japaneseWord: "いけ", kanji: "", englishMeaning: "pond" },
+            { japaneseWord: "いしゃ", kanji: "", englishMeaning: "doctor" },
+            { japaneseWord: "いす", kanji: "", englishMeaning: "chair" },
+            { japaneseWord: "いそがしい", kanji: "", englishMeaning: "busy [i-adj.]" },
+            { japaneseWord: "いたい", kanji: "", englishMeaning: "be painful [i-adj.]" },
+            { japaneseWord: "いち", kanji: "", englishMeaning: "one" },
+            { japaneseWord: "いちど", kanji: "ど", englishMeaning: "once" },
+            { japaneseWord: "いちにち", kanji: "一日", englishMeaning: "one day" },
+            { japaneseWord: "いちばん", kanji: "一ぱん", englishMeaning: "the best" },
+            { japaneseWord: "いつ", kanji: "", englishMeaning: "when" },
+            { japaneseWord: "いつか", kanji: "五日", englishMeaning: "the fifth day of the month, five days" },
+            { japaneseWord: "いっしょ(に", kanji: "", englishMeaning: "together" },
+            { japaneseWord: "いつつ", kanji: "五つ", englishMeaning: "five" },
+            { japaneseWord: "いつも", kanji: "", englishMeaning: "always" },
+            { japaneseWord: "いま", kanji: "今", englishMeaning: "now" },
+            { japaneseWord: "います", kanji: "", englishMeaning: "be (existence)" },
+            { japaneseWord: "いみ", kanji: "", englishMeaning: "meaning" },
+            { japaneseWord: "いもうと", kanji: "", englishMeaning: "(my) younger sister" },
+            { japaneseWord: "いもうとさん", kanji: "", englishMeaning: "(someone's) younger sister" },
+            { japaneseWord: "いや", kanji: "", englishMeaning: "hateful, not likable, unpleasant [na-adj.]" },
+            { japaneseWord: "いりぐち", kanji: "入口", englishMeaning: "entrance" },
+            { japaneseWord: "いります", kanji: "", englishMeaning: "be necessary, must have, need" },
+            { japaneseWord: "いれます", kanji: "入れます", englishMeaning: "put in" },
+            { japaneseWord: "いろ", kanji: "", englishMeaning: "color" },
+            { japaneseWord: "いろいろ", kanji: "", englishMeaning: "various [na-adj.]" },
+            { japaneseWord: "うえ", kanji: "上", englishMeaning: "on, above, top" },
+            { japaneseWord: "うしろ", kanji: "後ろ", englishMeaning: "back, behind" },
+            { japaneseWord: "うすい", kanji: "", englishMeaning: "thin [i-adj.]" },
+            { japaneseWord: "うた", kanji: "", englishMeaning: "song" },
+            { japaneseWord: "うたいます", kanji: "", englishMeaning: "sing" },
+            { japaneseWord: "うち", kanji: "", englishMeaning: "home" },
+            { japaneseWord: "うまれます", kanji: "生まれます", englishMeaning: "be born" },
+            { japaneseWord: "うみ", kanji: "", englishMeaning: "sea" },
+            { japaneseWord: "うります", kanji: "", englishMeaning: "sell" },
+            { japaneseWord: "うるさい", kanji: "", englishMeaning: "loud [i-adj.]" },
+            { japaneseWord: "うれしい", kanji: "", englishMeaning: "happy, pleased [i-adj.]" },
+            { japaneseWord: "うわぎ", kanji: "", englishMeaning: "coat, jacket, outerwear" },
+            { japaneseWord: "え", kanji: "絵", englishMeaning: "drawing, picture, painting" },
+            { japaneseWord: "エアコン", kanji: "", englishMeaning: "air conditioner" },
+            { japaneseWord: "えいが", kanji: "", englishMeaning: "movie" },
+            { japaneseWord: "えいがかん", kanji: "", englishMeaning: "movie theater" },
+            { japaneseWord: "えいご", kanji: "", englishMeaning: "English" },
+            { japaneseWord: "えき", kanji: "駅", englishMeaning: "station" },
+            { japaneseWord: "えらびます", kanji: "", englishMeaning: "choose" },
+            { japaneseWord: "エレベーター", kanji: "", englishMeaning: "elevator, lift" },
+            { japaneseWord: "えんぴつ", kanji: "", englishMeaning: "pencil" },
+            { japaneseWord: "お~", kanji: "", englishMeaning: "[polite prefix]" },
+            { japaneseWord: "おいしい", kanji: "", englishMeaning: "delicious, good, tasty [i-adj.]" },
+            { japaneseWord: "おいでになります", kanji: "", englishMeaning: "come, go, be [respect]" },
+            { japaneseWord: "おおい", kanji: "多い", englishMeaning: "a lot of [i-adj.]" },
+            { japaneseWord: "おおきい", kanji: "大きい", englishMeaning: "big [i-adj.]" },
+            { japaneseWord: "おおきな", kanji: "大きな", englishMeaning: "big" },
+            { japaneseWord: "おおぜい", kanji: "", englishMeaning: "many (people), a great number of (people)" },
+            { japaneseWord: "おかあさん", kanji: "お母さん", englishMeaning: "(someone's) mother" },
+            { japaneseWord: "おかし", kanji: "", englishMeaning: "confectionery, cake, candy, sweets" },
+            { japaneseWord: "おかね", kanji: "お金", englishMeaning: "money" },
+            { japaneseWord: "おきます", kanji: "", englishMeaning: "put (Group 1 verb)" },
+            { japaneseWord: "おきます", kanji: "", englishMeaning: "get up (Group 2 verb)" },
+            { japaneseWord: "おくさん", kanji: "", englishMeaning: "(someone's) wife" },
+            { japaneseWord: "おくに", kanji: "お国", englishMeaning: "country" },
+            { japaneseWord: "おくります", kanji: "", englishMeaning: "send" },
+            { japaneseWord: "おさけ", kanji: "", englishMeaning: "liquor, (alcoholic) drink, sake" },
+            { japaneseWord: "おさら", kanji: "", englishMeaning: "plate" },
+            { japaneseWord: "おじさん", kanji: "", englishMeaning: "uncle" },
+            { japaneseWord: "おじいさん", kanji: "", englishMeaning: "grandfather" },
+            { japaneseWord: "おしえます", kanji: "", englishMeaning: "teach, tell" },
+            { japaneseWord: "おそい", kanji: "", englishMeaning: "late [i-adj.]" },
+            { japaneseWord: "おそく", kanji: "", englishMeaning: "late [noun]" },
+            { japaneseWord: "おちゃ", kanji: "", englishMeaning: "tea" },
+            { japaneseWord: "おてあらい", kanji: "", englishMeaning: "lavatory, toilet" },
+            { japaneseWord: "おとうさん", kanji: "お父さん", englishMeaning: "(someone's) father" },
+            { japaneseWord: "おとうと", kanji: "", englishMeaning: "(my) younger brother" },
+            { japaneseWord: "おとうとさん", kanji: "", englishMeaning: "(someone's) younger brother" },
+            { japaneseWord: "おとこ", kanji: "男", englishMeaning: "male" },
+            { japaneseWord: "おとこのこ", kanji: "男の子", englishMeaning: "boy" },
+            { japaneseWord: "おととい", kanji: "", englishMeaning: "the day before yesterday" },
+            { japaneseWord: "おととし", kanji: "", englishMeaning: "the year before last" },
+            { japaneseWord: "おとな", kanji: "大人", englishMeaning: "adult" },
+            { japaneseWord: "おなか", kanji: "", englishMeaning: "stomach" },
+            { japaneseWord: "おなじ", kanji: "", englishMeaning: "same" },
+            { japaneseWord: "おにいさん", kanji: "", englishMeaning: "(someone's) older brother" },
+            { japaneseWord: "おにぎり", kanji: "", englishMeaning: "rice ball" },
+            { japaneseWord: "おねえさん", kanji: "", englishMeaning: "(someone's) older sister" },
+            { japaneseWord: "おばさん", kanji: "", englishMeaning: "aunt" },
+            { japaneseWord: "おばあさん", kanji: "", englishMeaning: "grandmother" },
+            { japaneseWord: "おべんとう", kanji: "", englishMeaning: "lunch box" },
+            { japaneseWord: "おぼえます", kanji: "", englishMeaning: "memorize" },
+            { japaneseWord: "おみせ", kanji: "お店", englishMeaning: "shop" },
+            { japaneseWord: "おもい", kanji: "", englishMeaning: "heavy [i-adj.]" },
+            { japaneseWord: "おもしろい", kanji: "", englishMeaning: "fun, funny, interesting [i-adj.]" },
+            { japaneseWord: "およぎます", kanji: "", englishMeaning: "swim" },
+            { japaneseWord: "おります", kanji: "", englishMeaning: "get off" },
+            { japaneseWord: "おわります", kanji: "", englishMeaning: "end, finish" },
+            { japaneseWord: "おんがく", kanji: "", englishMeaning: "music" },
+            { japaneseWord: "おんな", kanji: "女", englishMeaning: "female" },
+            { japaneseWord: "おんなのこ", kanji: "女の子", englishMeaning: "girl" },
+            { japaneseWord: "か", kanji: "火", englishMeaning: "Tuesday" },
+            { japaneseWord: "がいこく", kanji: "外国", englishMeaning: "foreign country" },
+            { japaneseWord: "がいこくじん", kanji: "外国人", englishMeaning: "foreigner" },
+            { japaneseWord: "かいしゃ", kanji: "会社", englishMeaning: "company" },
+            { japaneseWord: "かいだん", kanji: "", englishMeaning: "stairs" },
+            { japaneseWord: "かいとうようし", kanji: "", englishMeaning: "answer sheet" },
+            { japaneseWord: "かいます", kanji: "買います", englishMeaning: "buy" },
+            { japaneseWord: "かいもの", kanji: "買いもの", englishMeaning: "shopping" },
+            { japaneseWord: "かえします", kanji: "", englishMeaning: "return (object)" },
+            { japaneseWord: "かえります", kanji: "", englishMeaning: "return, go back" },
+            { japaneseWord: "かお", kanji: "", englishMeaning: "face" },
+            { japaneseWord: "かかります", kanji: "", englishMeaning: "take (time, money)" },
+            { japaneseWord: "かぎ", kanji: "", englishMeaning: "key" },
+            { japaneseWord: "かきます", kanji: "書きます", englishMeaning: "write" },
+            { japaneseWord: "がくせい", kanji: "学生", englishMeaning: "student" },
+            { japaneseWord: "かけます", kanji: "", englishMeaning: "wear" },
+            { japaneseWord: "かけます", kanji: "", englishMeaning: "call" },
+            { japaneseWord: "かさ", kanji: "", englishMeaning: "umbrella" },
+            { japaneseWord: "かします", kanji: "", englishMeaning: "lend" },
+            { japaneseWord: "かぜ", kanji: "", englishMeaning: "wind" },
+            { japaneseWord: "かぜ", kanji: "", englishMeaning: "cold" },
+            { japaneseWord: "かぞく", kanji: "", englishMeaning: "family" },
+            { japaneseWord: "かた", kanji: "", englishMeaning: "person (respect)" },
+            { japaneseWord: "カタカナ", kanji: "", englishMeaning: "katakana" },
+            { japaneseWord: "がっこう", kanji: "学校", englishMeaning: "school" },
+            { japaneseWord: "かど", kanji: "", englishMeaning: "comer" },
+            { japaneseWord: "かない", kanji: "", englishMeaning: "(my) wife" },
+            { japaneseWord: "かばん", kanji: "", englishMeaning: "bag" },
+            { japaneseWord: "かびん", kanji: "", englishMeaning: "vase" },
+            { japaneseWord: "かぶります", kanji: "", englishMeaning: "put on" },
+            { japaneseWord: "かみ", kanji: "紙", englishMeaning: "paper" },
+            { japaneseWord: "カメラ", kanji: "", englishMeaning: "camera" },
+            { japaneseWord: "かようび", kanji: "火よう日", englishMeaning: "Tuesday" },
+            { japaneseWord: "からい", kanji: "", englishMeaning: "hot, spicy [i-adj.]" },
+            { japaneseWord: "からだ", kanji: "", englishMeaning: "body" },
+            { japaneseWord: "かります", kanji: "", englishMeaning: "barrow" },
+            { japaneseWord: "かるい", kanji: "", englishMeaning: "light, not heavy [i-adj.]" },
+            { japaneseWord: "カレンダー", kanji: "", englishMeaning: "calendar" },
+            { japaneseWord: "かわ", kanji: "川", englishMeaning: "river" },
+            { japaneseWord: "かわいい", kanji: "", englishMeaning: "pretty, sweet, cute [i-adj.]" },
+            { japaneseWord: "かんがえます", kanji: "", englishMeaning: "consider, think" },
+            { japaneseWord: "かんじ", kanji: "", englishMeaning: "kanji" },
+            { japaneseWord: "かんたん", kanji: "", englishMeaning: "easy [na-adj.]" },
+            { japaneseWord: "き", kanji: "木", englishMeaning: "tree" },
+            { japaneseWord: "きいろい", kanji: "", englishMeaning: "yellow [i-adj.]" },
+            { japaneseWord: "きえます", kanji: "", englishMeaning: "go out, go off" },
+            { japaneseWord: "ききます", kanji: "聞きます", englishMeaning: "ask, hear, listen" },
+            { japaneseWord: "きた", kanji: "北", englishMeaning: "north" },
+            { japaneseWord: "ギター", kanji: "", englishMeaning: "guitar" },
+            { japaneseWord: "きたない", kanji: "", englishMeaning: "dirty [i-adj.]" },
+            { japaneseWord: "きっさてん", kanji: "", englishMeaning: "coffee shop" },
+            { japaneseWord: "きって", kanji: "", englishMeaning: "stamp" },
+            { japaneseWord: "きっぷ", kanji: "", englishMeaning: "ticket" },
+            { japaneseWord: "きのう", kanji: "", englishMeaning: "yesterday" },
+            { japaneseWord: "きます", kanji: "来ます", englishMeaning: "come" },
+            { japaneseWord: "きます", kanji: "", englishMeaning: "put on, wear" },
+            { japaneseWord: "きゅう", kanji: "九", englishMeaning: "nine" },
+            { japaneseWord: "ぎゅうにく", kanji: "", englishMeaning: "beef" },
+            { japaneseWord: "ぎゅうにゅう", kanji: "", englishMeaning: "milk" },
+            { japaneseWord: "きょう", kanji: "今日", englishMeaning: "today" },
+            { japaneseWord: "きょうしつ", kanji: "", englishMeaning: "classroom" },
+            { japaneseWord: "きょうだい", kanji: "", englishMeaning: "brothers and sisters; siblings" },
+            { japaneseWord: "きょうと", kanji: "", englishMeaning: "Kyoto [name of city]" },
+            { japaneseWord: "きょねん", kanji: "", englishMeaning: "last year" },
+            { japaneseWord: "きらい", kanji: "", englishMeaning: "hateful, unpleasant, not likable [na-adj.]" },
+            { japaneseWord: "きります", kanji: "", englishMeaning: "cut" },
+            { japaneseWord: "きれい", kanji: "", englishMeaning: "beautiful, clean [na-adj.]" },
+            { japaneseWord: "きん", kanji: "金", englishMeaning: "Friday" },
+            { japaneseWord: "ぎんこう", kanji: "銀行", englishMeaning: "bank" },
+            { japaneseWord: "きんようび", kanji: "金よう日", englishMeaning: "Friday" },
+            { japaneseWord: "く", kanji: "九", englishMeaning: "nine" },
+            { japaneseWord: "くすり", kanji: "", englishMeaning: "medicine" },
+            { japaneseWord: "くだもの", kanji: "", englishMeaning: "fruit" },
+            { japaneseWord: "くち", kanji: "口", englishMeaning: "mouth" },
+            { japaneseWord: "くつ", kanji: "", englishMeaning: "shoes" },
+            { japaneseWord: "くつした", kanji: "くつ下", englishMeaning: "socks" },
+            { japaneseWord: "くに", kanji: "国", englishMeaning: "country" },
+            { japaneseWord: "くもり", kanji: "", englishMeaning: "cloudy weather" },
+            { japaneseWord: "くらい", kanji: "", englishMeaning: "dark [i-adj.]" },
+            { japaneseWord: "クラス", kanji: "", englishMeaning: "class" },
+            { japaneseWord: "くるま", kanji: "車", englishMeaning: "car" },
+            { japaneseWord: "くろ", kanji: "", englishMeaning: "black [noun]" },
+            { japaneseWord: "くろい", kanji: "", englishMeaning: "black [i-adj.]" },
+            { japaneseWord: "くろく", kanji: "", englishMeaning: "black [adv.]" },
+            { japaneseWord: "ケーキ", kanji: "", englishMeaning: "cake" },
+            { japaneseWord: "けさ", kanji: "今朝", englishMeaning: "this morning" },
+            { japaneseWord: "けしゴム", kanji: "", englishMeaning: "eraser" },
+            { japaneseWord: "けします", kanji: "", englishMeaning: "switch off, turn off, erase" },
+            { japaneseWord: "げつ", kanji: "月", englishMeaning: "Monday" },
+            { japaneseWord: "けっこんします", kanji: "", englishMeaning: "get married" },
+            { japaneseWord: "げつようび", kanji: "月よう日", englishMeaning: "Monday" },
+            { japaneseWord: "げんかん", kanji: "", englishMeaning: "front door, front entrance" },
+            { japaneseWord: "げんき", kanji: "", englishMeaning: "fine [na-adj.]" },
+            { japaneseWord: "ご", kanji: "五", englishMeaning: "five" },
+            { japaneseWord: "こうえん", kanji: "", englishMeaning: "park" },
+            { japaneseWord: "こうばん", kanji: "", englishMeaning: "police box" },
+            { japaneseWord: "こえ", kanji: "", englishMeaning: "voice" },
+            { japaneseWord: "コート", kanji: "", englishMeaning: "coat" },
+            { japaneseWord: "コーヒー", kanji: "", englishMeaning: "coffee" },
+            { japaneseWord: "ここ", kanji: "", englishMeaning: "here" },
+            { japaneseWord: "ごご", kanji: "午後", englishMeaning: "afternoon, p.m." },
+            { japaneseWord: "ここのか", kanji: "九日", englishMeaning: "ninth day of the month, nine days" },
+            { japaneseWord: "ここのつ", kanji: "九つ", englishMeaning: "nine" },
+            { japaneseWord: "ごしゅじん", kanji: "", englishMeaning: "(someone's) husband" },
+            { japaneseWord: "ごぜん", kanji: "午前", englishMeaning: "a.m." },
+            { japaneseWord: "こたえ", kanji: "", englishMeaning: "answer" },
+            { japaneseWord: "こたえかた", kanji: "", englishMeaning: "how to answer" },
+            { japaneseWord: "こたえます", kanji: "", englishMeaning: "answer" },
+            { japaneseWord: "こちら", kanji: "", englishMeaning: "this side, this place, this one" },
+            { japaneseWord: "コップ", kanji: "", englishMeaning: "glass, drinking cup" },
+            { japaneseWord: "ことし", kanji: "今年", englishMeaning: "this year" },
+            { japaneseWord: "ことば", kanji: "", englishMeaning: "word, language, phrase" },
+            { japaneseWord: "こども", kanji: "子ども", englishMeaning: "child" },
+            { japaneseWord: "この~", kanji: "", englishMeaning: "this..." },
+            { japaneseWord: "ごはん", kanji: "", englishMeaning: "rice, meal" },
+            { japaneseWord: "コピー", kanji: "", englishMeaning: "copy" },
+            { japaneseWord: "コピーします", kanji: "", englishMeaning: "make a copy" },
+            { japaneseWord: "こまります", kanji: "", englishMeaning: "be in trouble" },
+            { japaneseWord: "これ", kanji: "", englishMeaning: "this (one)" },
+            { japaneseWord: "こんげつ", kanji: "今月", englishMeaning: "this month" },
+            { japaneseWord: "こんしゅう", kanji: "今週", englishMeaning: "this week" },
+            { japaneseWord: "こんな", kanji: "", englishMeaning: "this sort of, like this [na-adj.]" },
+            { japaneseWord: "こんばん", kanji: "", englishMeaning: "tonight" },
+            { japaneseWord: "さいご", kanji: "", englishMeaning: "end, last time" },
+            { japaneseWord: "さかな", kanji: "魚", englishMeaning: "fish" },
+            { japaneseWord: "さき", kanji: "先", englishMeaning: "former, earlier" },
+            { japaneseWord: "さきます", kanji: "", englishMeaning: "bloom" },
+            { japaneseWord: "さくぶん", kanji: "", englishMeaning: "composition" },
+            { japaneseWord: "さします", kanji: "", englishMeaning: "put up (umbrella)" },
+            { japaneseWord: "サッカー", kanji: "", englishMeaning: "soccer, football" },
+            { japaneseWord: "ざっし", kanji: "", englishMeaning: "magazine" },
+            { japaneseWord: "さとう", kanji: "", englishMeaning: "sugar" },
+            { japaneseWord: "さむい", kanji: "", englishMeaning: "cold (weather) [i-adj.]" },
+            { japaneseWord: "さらいねん", kanji: "", englishMeaning: "the year after next" },
+            { japaneseWord: "さん", kanji: "", englishMeaning: "three" },
+            { japaneseWord: "さんぽ", kanji: "", englishMeaning: "walk" },
+            { japaneseWord: "さんぽ(を)します", kanji: "", englishMeaning: "take a walk" },
+            { japaneseWord: "し", kanji: "四", englishMeaning: "four" },
+            { japaneseWord: "しお", kanji: "", englishMeaning: "salt" },
+            { japaneseWord: "しかし", kanji: "", englishMeaning: "but, however (formal, written language)" },
+            { japaneseWord: "じかん", kanji: "時間", englishMeaning: "time" },
+            { japaneseWord: "しごと", kanji: "", englishMeaning: "work" },
+            { japaneseWord: "しずか", kanji: "静か", englishMeaning: "quiet [na-adj.]" },
+            { japaneseWord: "した", kanji: "下", englishMeaning: "under, below" },
+            { japaneseWord: "しつもん", kanji: "質問", englishMeaning: "question" },
+            { japaneseWord: "じてんしゃ", kanji: "自転車", englishMeaning: "bicycle" },
+            { japaneseWord: "じどうしゃ", kanji: "自動車", englishMeaning: "car" },
+            { japaneseWord: "しにます", kanji: "", englishMeaning: "die" },
+            { japaneseWord: "じびき", kanji: "字引", englishMeaning: "dictionary" },
+            { japaneseWord: "じぶん", kanji: "自分", englishMeaning: "oneself" },
+            { japaneseWord: "します", kanji: "", englishMeaning: "do" },
+            { japaneseWord: "しまります", kanji: "", englishMeaning: "close (intransitive verb)" },
+            { japaneseWord: "しめます", kanji: "", englishMeaning: "close (transitive verb)" },
+            { japaneseWord: "しゃしん", kanji: "写真", englishMeaning: "photograph, photo, picture" },
+            { japaneseWord: "シャツ", kanji: "", englishMeaning: "shirt" },
+            { japaneseWord: "シャワー", kanji: "", englishMeaning: "shower" },
+            { japaneseWord: "しゅう", kanji: "週", englishMeaning: "week" },
+            { japaneseWord: "じゅう", kanji: "十", englishMeaning: "ten" },
+            { japaneseWord: "ジュース", kanji: "", englishMeaning: "juice" },
+            { japaneseWord: "じゅぎょう", kanji: "", englishMeaning: "class, lesson" },
+            { japaneseWord: "しゅくだい", kanji: "", englishMeaning: "homework" },
+            { japaneseWord: "じょうず", kanji: "上手", englishMeaning: "good, skillful [na-adj.]" },
+            { japaneseWord: "じょうずに", kanji: "上手に", englishMeaning: "well [adv.]" },
+            { japaneseWord: "じょうぶ", kanji: "丈夫", englishMeaning: "healthy, strong, firm, durable [na-adj.]" },
+            { japaneseWord: "しょうゆ", kanji: "醤油", englishMeaning: "soy sauce" },
+            { japaneseWord: "しょくどう", kanji: "食堂", englishMeaning: "dining room" },
+            { japaneseWord: "しります", kanji: "知ります", englishMeaning: "know" },
+            { japaneseWord: "しろい", kanji: "白い", englishMeaning: "white [i-adj.]" },
+            { japaneseWord: "しんぶん", kanji: "新聞", englishMeaning: "newspaper" },
+            { japaneseWord: "すい", kanji: "水", englishMeaning: "Wednesday" },
+            { japaneseWord: "すいます", kanji: "", englishMeaning: "breath in, smoke" },
+            { japaneseWord: "すいようび", kanji: "水曜日", englishMeaning: "Wednesday" },
+            { japaneseWord: "スカート", kanji: "", englishMeaning: "skirt" },
+            { japaneseWord: "すき", kanji: "", englishMeaning: "like [na-adj.]" },
+            { japaneseWord: "すくない", kanji: "少ない", englishMeaning: "few" },
+            { japaneseWord: "すぐ", kanji: "", englishMeaning: "soon, right away" },
+            { japaneseWord: "すこし", kanji: "少し", englishMeaning: "a little" },
+            { japaneseWord: "すし", kanji: "", englishMeaning: "sushi" },
+            { japaneseWord: "すしや", kanji: "", englishMeaning: "sushi restaurant" },
+            { japaneseWord: "すずしい", kanji: "", englishMeaning: "cool (weather) [i-adj.]" },
+            { japaneseWord: "ストーブ", kanji: "", englishMeaning: "stove, heater" },
+            { japaneseWord: "スプーン", kanji: "", englishMeaning: "spoon" },
+            { japaneseWord: "スポーツ", kanji: "", englishMeaning: "sports" },
+            { japaneseWord: "ズボン", kanji: "", englishMeaning: "trousers, pants" },
+            { japaneseWord: "すみます", kanji: "住みます", englishMeaning: "live, inhabit" },
+            { japaneseWord: "スリッパ", kanji: "", englishMeaning: "slippers" },
+            { japaneseWord: "すわります", kanji: "", englishMeaning: "sit down" },
+            { japaneseWord: "せ", kanji: "", englishMeaning: "height" },
+            { japaneseWord: "せいと", kanji: "生徒", englishMeaning: "student" },
+            { japaneseWord: "セーター", kanji: "", englishMeaning: "sweater" },
+            { japaneseWord: "せっけん", kanji: "", englishMeaning: "soap" },
+            { japaneseWord: "せびろ", kanji: "背広", englishMeaning: "jacket, suit" },
+            { japaneseWord: "せまい", kanji: "", englishMeaning: "narrow, not spacious [i-adj.]" },
+            { japaneseWord: "ゼロ", kanji: "", englishMeaning: "zero" },
+            { japaneseWord: "せん", kanji: "千", englishMeaning: "thousand" },
+            { japaneseWord: "せんげつ", kanji: "先月", englishMeaning: "last month" },
+            { japaneseWord: "せんしゅう", kanji: "先週", englishMeaning: "last week" },
+            { japaneseWord: "せんせい", kanji: "先生", englishMeaning: "teacher" },
+            { japaneseWord: "せんたく", kanji: "洗濯", englishMeaning: "washing, laundry" },
+            { japaneseWord: "ぜんぶ", kanji: "全部", englishMeaning: "all" },
+            { japaneseWord: "そうじ", kanji: "掃除", englishMeaning: "cleaning" },
+            { japaneseWord: "そうじします", kanji: "", englishMeaning: "clean" },
+            { japaneseWord: "そこ", kanji: "", englishMeaning: "there" },
+            { japaneseWord: "そして", kanji: "", englishMeaning: "and, then" },
+            { japaneseWord: "そちら", kanji: "", englishMeaning: "there, your place" },
+            { japaneseWord: "そと", kanji: "外", englishMeaning: "outside" },
+            { japaneseWord: "その~", kanji: "", englishMeaning: "that ..." },
+            { japaneseWord: "そば", kanji: "", englishMeaning: "nearby" },
+            { japaneseWord: "そら", kanji: "空", englishMeaning: "sky" },
+            { japaneseWord: "それ", kanji: "", englishMeaning: "that (one)" },
+            { japaneseWord: "それから", kanji: "", englishMeaning: "and then, after that" },
+            { japaneseWord: "それでは", kanji: "", englishMeaning: "then, well" },
+            { japaneseWord: "だいがく", kanji: "大学", englishMeaning: "university" },
+            { japaneseWord: "たいしかん", kanji: "大使館", englishMeaning: "embassy" },
+            { japaneseWord: "だいじょうぶ", kanji: "", englishMeaning: "okay, no problem [na-adj.]" },
+            { japaneseWord: "だいすき", kanji: "", englishMeaning: "be very fond of, like very much [na-adj.]" },
+            { japaneseWord: "たいせつ", kanji: "", englishMeaning: "important [na-adj.]" },
+            { japaneseWord: "だいたい", kanji: "", englishMeaning: "almost" },
+            { japaneseWord: "たいてい", kanji: "", englishMeaning: "mostly, usually" },
+            { japaneseWord: "だいどころ", kanji: "台所", englishMeaning: "kitchen" },
+            { japaneseWord: "たいへん", kanji: "", englishMeaning: "very [adv.] (formal)" },
+            { japaneseWord: "たいへん", kanji: "", englishMeaning: "serious, hard, difficult [na-adj.]" },
+            { japaneseWord: "たかい", kanji: "高い", englishMeaning: "expensive [i-adj.]" },
+            { japaneseWord: "たかい", kanji: "高い", englishMeaning: "tall, high [i-adj.]" },
+            { japaneseWord: "だから", kanji: "", englishMeaning: "so, therefore" },
+            { japaneseWord: "たくさん", kanji: "", englishMeaning: "many, much" },
+            { japaneseWord: "タクシー", kanji: "", englishMeaning: "taxi" },
+            { japaneseWord: "だします", kanji: "出します", englishMeaning: "take out" },
+            { japaneseWord: "ただしい", kanji: "", englishMeaning: "correct [i-adj.]" },
+            { japaneseWord: "たちます", kanji: "立ちます", englishMeaning: "stand up" },
+            { japaneseWord: "たてもの", kanji: "建物", englishMeaning: "building" },
+            { japaneseWord: "たのしい", kanji: "", englishMeaning: "enjoyable, pleasant [i-adj.]" },
+            { japaneseWord: "たのみます", kanji: "", englishMeaning: "ask, request" },
+            { japaneseWord: "たばこ", kanji: "", englishMeaning: "cigarette, tobacco" },
+            { japaneseWord: "たぶん", kanji: "", englishMeaning: "probably, perhaps" },
+            { japaneseWord: "たべもの", kanji: "食べ物", englishMeaning: "food" },
+            { japaneseWord: "たべます", kanji: "食べます", englishMeaning: "eat" },
+            { japaneseWord: "たまご", kanji: "", englishMeaning: "egg" },
+            { japaneseWord: "だれ", kanji: "", englishMeaning: "who" },
+            { japaneseWord: "たんじょうび", kanji: "誕生日", englishMeaning: "birthday" },
+            { japaneseWord: "だんだん", kanji: "", englishMeaning: "gradually, little by little" },
+            { japaneseWord: "ちいさい", kanji: "小さい", englishMeaning: "small" },
+            { japaneseWord: "ちいさな", kanji: "小さな", englishMeaning: "small" },
+            { japaneseWord: "ちかい", kanji: "近い", englishMeaning: "near, close [i-adj.]" },
+            { japaneseWord: "ちがいます", kanji: "", englishMeaning: "be different, differ" },
+            { japaneseWord: "ちかく", kanji: "近く", englishMeaning: "neighborhood [noun]" },
+            { japaneseWord: "ちかてつ", kanji: "", englishMeaning: "subway" },
+            { japaneseWord: "ちず", kanji: "地図", englishMeaning: "map" },
+            { japaneseWord: "ちち", kanji: "父", englishMeaning: "(my) father" },
+            { japaneseWord: "ちゃいろい", kanji: "", englishMeaning: "brown" },
+            { japaneseWord: "ちゃわん", kanji: "", englishMeaning: "(rice) bowl" },
+            { japaneseWord: "ちょうど", kanji: "", englishMeaning: "just" },
+            { japaneseWord: "ちょっと", kanji: "", englishMeaning: "a little" },
+            { japaneseWord: "ついたち", kanji: "一日", englishMeaning: "the first day of the month" },
+            { japaneseWord: "つかいます", kanji: "", englishMeaning: "use" },
+            { japaneseWord: "つかれます", kanji: "", englishMeaning: "get tired" },
+            { japaneseWord: "つぎ", kanji: "次", englishMeaning: "next" },
+            { japaneseWord: "つきます", kanji: "", englishMeaning: "arrive" },
+            { japaneseWord: "つくえ", kanji: "机", englishMeaning: "desk" },
+            { japaneseWord: "つくりかた", kanji: "", englishMeaning: "how to make" },
+            { japaneseWord: "つくります", kanji: "", englishMeaning: "make" },
+            { japaneseWord: "つけます", kanji: "", englishMeaning: "turn on" },
+            { japaneseWord: "つとめます", kanji: "", englishMeaning: "work for" },
+            { japaneseWord: "つまらない", kanji: "", englishMeaning: "uninteresting, boring [i-adj.]" },
+            { japaneseWord: "つめたい", kanji: "", englishMeaning: "cold (object) [i-adj.]" },
+            { japaneseWord: "つよい", kanji: "", englishMeaning: "strong [i-adj.]" },
+            { japaneseWord: "て", kanji: "手", englishMeaning: "hand" },
+            { japaneseWord: "ティッシュペーパー", kanji: "", englishMeaning: "tissue" },
+            { japaneseWord: "テープ", kanji: "", englishMeaning: "tape" },
+            { japaneseWord: "テープレコーダー", kanji: "", englishMeaning: "tape recorder" },
+            { japaneseWord: "テーブル", kanji: "", englishMeaning: "table" },
+            { japaneseWord: "でかけます", kanji: "出かけます", englishMeaning: "go out" },
+            { japaneseWord: "てがみ", kanji: "手紙", englishMeaning: "letter" },
+            { japaneseWord: "できます", kanji: "", englishMeaning: "can" },
+            { japaneseWord: "でぐち", kanji: "出口", englishMeaning: "exit" },
+            { japaneseWord: "テスト", kanji: "", englishMeaning: "test" },
+            { japaneseWord: "では", kanji: "", englishMeaning: "then, well then" },
+            { japaneseWord: "デパート", kanji: "", englishMeaning: "department store" },
+            { japaneseWord: "でます", kanji: "出ます", englishMeaning: "leave" },
+            { japaneseWord: "でも", kanji: "", englishMeaning: "but" },
+            { japaneseWord: "テレビ", kanji: "", englishMeaning: "TV" },
+            { japaneseWord: "てんき", kanji: "天気", englishMeaning: "weather" },
+            { japaneseWord: "でんき", kanji: "電気", englishMeaning: "electricity" },
+            { japaneseWord: "でんしゃ", kanji: "電車", englishMeaning: "train" },
+            { japaneseWord: "でんわ", kanji: "電話", englishMeaning: "telephone" },
+            { japaneseWord: "でんわします", kanji: "電話します", englishMeaning: "call, ring" },
+            { japaneseWord: "でんわばんごう", kanji: "電話番号", englishMeaning: "telephone number" },
+            { japaneseWord: "と", kanji: "", englishMeaning: "door" },
+            { japaneseWord: "ど", kanji: "土", englishMeaning: "Saturday" },
+            { japaneseWord: "ドア", kanji: "", englishMeaning: "door" },
+            { japaneseWord: "トイレ", kanji: "", englishMeaning: "toilet, lavatory" },
+            { japaneseWord: "トイレットペーパー", kanji: "", englishMeaning: "toilet paper" },
+            { japaneseWord: "どう", kanji: "", englishMeaning: "how" },
+            { japaneseWord: "とうきょう", kanji: "東京", englishMeaning: "Tokyo" },
+            { japaneseWord: "どうして", kanji: "", englishMeaning: "why" },
+            { japaneseWord: "とうふ", kanji: "豆腐", englishMeaning: "tofu" },
+            { japaneseWord: "どうぶつ", kanji: "動物", englishMeaning: "animal" },
+            { japaneseWord: "とお", kanji: "十", englishMeaning: "ten" },
+            { japaneseWord: "とおい", kanji: "", englishMeaning: "far [i-adj.]" },
+            { japaneseWord: "とおく", kanji: "", englishMeaning: "distantly, far [noun]" },
+            { japaneseWord: "とおか", kanji: "十日", englishMeaning: "the tenth day of the month, ten days" },
+            { japaneseWord: "ときどき", kanji: "", englishMeaning: "sometimes" },
+            { japaneseWord: "とけい", kanji: "時計", englishMeaning: "clock, watch" },
+            { japaneseWord: "どこ", kanji: "", englishMeaning: "where" },
+            { japaneseWord: "どこか", kanji: "", englishMeaning: "somewhere" },
+            { japaneseWord: "ところ", kanji: "", englishMeaning: "place" },
+            { japaneseWord: "としょかん", kanji: "図書館", englishMeaning: "library" },
+            { japaneseWord: "どちら", kanji: "", englishMeaning: "which" },
+            { japaneseWord: "とても", kanji: "", englishMeaning: "very" },
+            { japaneseWord: "どなた", kanji: "", englishMeaning: "who (polite)" },
+            { japaneseWord: "どの~", kanji: "", englishMeaning: "which ..." },
+            { japaneseWord: "とびます", kanji: "", englishMeaning: "fly" },
+            { japaneseWord: "とまります", kanji: "", englishMeaning: "stop" },
+            { japaneseWord: "ともだち", kanji: "友達", englishMeaning: "friend" },
+            { japaneseWord: "どようび", kanji: "土曜日", englishMeaning: "Saturday" },
+            { japaneseWord: "とり", kanji: "", englishMeaning: "bird" },
+            { japaneseWord: "とりにく", kanji: "", englishMeaning: "chicken" },
+            { japaneseWord: "とります", kanji: "", englishMeaning: "take" },
+            { japaneseWord: "とります", kanji: "", englishMeaning: "take (photographs)" },
+            { japaneseWord: "どれ", kanji: "", englishMeaning: "which one" },
+            { japaneseWord: "どんな", kanji: "", englishMeaning: "what kind of ..." },
+            { japaneseWord: "ナイフ", kanji: "", englishMeaning: "knife" },
+            { japaneseWord: "なか", kanji: "中", englishMeaning: "inside" },
+            { japaneseWord: "ながい", kanji: "長い", englishMeaning: "long [i-adj.]" },
+            { japaneseWord: "なきます", kanji: "", englishMeaning: "sing, mew, moo, etc." },
+            { japaneseWord: "なつ", kanji: "", englishMeaning: "summer" },
+            { japaneseWord: "など", kanji: "", englishMeaning: "and so on, etc." },
+            { japaneseWord: "ななつ", kanji: "七つ", englishMeaning: "seven" },
+            { japaneseWord: "なに", kanji: "何", englishMeaning: "what" },
+            { japaneseWord: "なにか", kanji: "何か", englishMeaning: "something" },
+            { japaneseWord: "なのか", kanji: "七日", englishMeaning: "the seventh day of the month" },
+            { japaneseWord: "なまえ", kanji: "名前", englishMeaning: "name" },
+            { japaneseWord: "ならいます", kanji: "", englishMeaning: "learn (from somebody)" },
+            { japaneseWord: "ならびます", kanji: "", englishMeaning: "(someone) line up" },
+            { japaneseWord: "ならべます", kanji: "", englishMeaning: "line up (something)" },
+            { japaneseWord: "なります", kanji: "", englishMeaning: "become" },
+            { japaneseWord: "なん", kanji: "何", englishMeaning: "what" },
+            { japaneseWord: "なんじ", kanji: "何時", englishMeaning: "what time" },
+            { japaneseWord: "なんにち", kanji: "何日", englishMeaning: "which day of the month" },
+            { japaneseWord: "に", kanji: "二", englishMeaning: "two" },
+            { japaneseWord: "にぎやか", kanji: "", englishMeaning: "lively [na-adj.]" },
+            { japaneseWord: "にく", kanji: "肉", englishMeaning: "meat" },
+            { japaneseWord: "にし", kanji: "西", englishMeaning: "west" },
+            { japaneseWord: "にち", kanji: "日", englishMeaning: "Sunday" },
+            { japaneseWord: "にちようび", kanji: "日曜日", englishMeaning: "Sunday" },
+            { japaneseWord: "にねん", kanji: "二年", englishMeaning: "two years" },
+            { japaneseWord: "にほん", kanji: "日本", englishMeaning: "Japan" },
+            { japaneseWord: "にほんご", kanji: "日本語", englishMeaning: "Japanese language" },
+            { japaneseWord: "にもつ", kanji: "荷物", englishMeaning: "baggage" },
+            { japaneseWord: "ニュース", kanji: "", englishMeaning: "news" },
+            { japaneseWord: "にわ", kanji: "庭", englishMeaning: "garden" },
+            { japaneseWord: "ぬぎます", kanji: "", englishMeaning: "take off" },
+            { japaneseWord: "ぬります", kanji: "", englishMeaning: "paint" },
+            { japaneseWord: "ネクタイ", kanji: "", englishMeaning: "necktie" },
+            { japaneseWord: "ねます", kanji: "", englishMeaning: "go to bed, sleep" },
+            { japaneseWord: "ノート", kanji: "", englishMeaning: "notebook" },
+            { japaneseWord: "のぼります", kanji: "登ります", englishMeaning: "go up, climb" },
+            { japaneseWord: "のみます", kanji: "飲みます", englishMeaning: "drink" },
+            { japaneseWord: "のみもの", kanji: "飲み物", englishMeaning: "drinks" },
+            { japaneseWord: "のります", kanji: "", englishMeaning: "get on, ride, take" },
+            { japaneseWord: "は", kanji: "", englishMeaning: "teeth" },
+            { japaneseWord: "パーティー", kanji: "", englishMeaning: "party" },
+            { japaneseWord: "はいざら", kanji: "", englishMeaning: "ashtray" },
+            { japaneseWord: "はいります", kanji: "入ります", englishMeaning: "enter" },
+            { japaneseWord: "はがき", kanji: "", englishMeaning: "postcard" },
+            { japaneseWord: "はきます", kanji: "", englishMeaning: "put on" },
+            { japaneseWord: "はこ", kanji: "箱", englishMeaning: "box" },
+            { japaneseWord: "はし", kanji: "箸", englishMeaning: "chopsticks" },
+            { japaneseWord: "はし", kanji: "", englishMeaning: "bridge" },
+            { japaneseWord: "はじまります", kanji: "", englishMeaning: "begin, start" },
+            { japaneseWord: "はじめに", kanji: "初めに", englishMeaning: "at the beginning" },
+            { japaneseWord: "はじめて", kanji: "", englishMeaning: "for the first time" },
+            { japaneseWord: "バス", kanji: "", englishMeaning: "bus" },
+            { japaneseWord: "バスがいしゃ", kanji: "バス会社", englishMeaning: "bus agency, bus company" },
+            { japaneseWord: "バスてい", kanji: "バス停", englishMeaning: "bus stop" },
+            { japaneseWord: "バスりょこう", kanji: "バス旅行", englishMeaning: "bus tour, bus trip" },
+            { japaneseWord: "バター", kanji: "", englishMeaning: "butter" },
+            { japaneseWord: "はたち", kanji: "", englishMeaning: "twenty years old" },
+            { japaneseWord: "はたらきます", kanji: "", englishMeaning: "work" },
+            { japaneseWord: "はち", kanji: "八", englishMeaning: "eight" },
+            { japaneseWord: "はつか", kanji: "二十日", englishMeaning: "the twentieth day of the month, twenty days" },
+            { japaneseWord: "はな", kanji: "鼻", englishMeaning: "nose" },
+            { japaneseWord: "はな", kanji: "花", englishMeaning: "flower" },
+            { japaneseWord: "はなし", kanji: "話", englishMeaning: "story" },
+            { japaneseWord: "はなします", kanji: "話します", englishMeaning: "speak, talk, tell" },
+            { japaneseWord: "はは", kanji: "母", englishMeaning: "(my) mother" },
+            { japaneseWord: "はやい", kanji: "", englishMeaning: "early [i-adj.]" },
+            { japaneseWord: "はやい", kanji: "", englishMeaning: "quick, fast [i-adj.]" },
+            { japaneseWord: "はる", kanji: "", englishMeaning: "spring" },
+            { japaneseWord: "はります", kanji: "", englishMeaning: "stick, put something on" },
+            { japaneseWord: "はれ", kanji: "", englishMeaning: "fair weather" },
+            { japaneseWord: "はれます", kanji: "", englishMeaning: "clear up" },
+            { japaneseWord: "ばん", kanji: "晩", englishMeaning: "evening, night" },
+            { japaneseWord: "パン", kanji: "", englishMeaning: "bread" },
+            { japaneseWord: "ハンカチ", kanji: "", englishMeaning: "handkerchief" },
+            { japaneseWord: "ばんごう", kanji: "番号", englishMeaning: "number" },
+            { japaneseWord: "ばんごはん", kanji: "晩ごはん", englishMeaning: "dinner" },
+            { japaneseWord: "はんぶん", kanji: "半分", englishMeaning: "half" },
+            { japaneseWord: "パンや", kanji: "パン屋", englishMeaning: "bakery" },
+            { japaneseWord: "ひ", kanji: "日", englishMeaning: "day" },
+            { japaneseWord: "ひがし", kanji: "東", englishMeaning: "east" },
+            { japaneseWord: "ひきます", kanji: "", englishMeaning: "pull" },
+            { japaneseWord: "ひきます", kanji: "", englishMeaning: "play (music instrument)" },
+            { japaneseWord: "ひくい", kanji: "", englishMeaning: "low [i-adj.]" },
+            { japaneseWord: "ひこうき", kanji: "飛行機", englishMeaning: "airplane" },
+            { japaneseWord: "ひだり", kanji: "左", englishMeaning: "left" },
+            { japaneseWord: "ひと", kanji: "人", englishMeaning: "human, person" },
+            { japaneseWord: "ひとつ", kanji: "一つ", englishMeaning: "one" },
+            { japaneseWord: "いちがつ", kanji: "一月", englishMeaning: "one month" },
+            { japaneseWord: "ひとり", kanji: "一人", englishMeaning: "one person" },
+            { japaneseWord: "ひま", kanji: "", englishMeaning: "free (time), not busy, spare time [na-adj.]" },
+            { japaneseWord: "びょういん", kanji: "病院", englishMeaning: "hospital" },
+            { japaneseWord: "びょうき", kanji: "", englishMeaning: "illness, disease" },
+            { japaneseWord: "ひらがな", kanji: "ひらがな", englishMeaning: "Hiragana" },
+            { japaneseWord: "ひる", kanji: "昼", englishMeaning: "daytime, noon" },
+            { japaneseWord: "ビル", kanji: "", englishMeaning: "building" },
+            { japaneseWord: "ひるごはん", kanji: "昼ごはん", englishMeaning: "lunch" },
+            { japaneseWord: "ひろい", kanji: "広い", englishMeaning: "spacious, wide [i-adj.]" },
+            { japaneseWord: "フィルム", kanji: "", englishMeaning: "film" },
+            { japaneseWord: "ふうとう", kanji: "", englishMeaning: "envelope" },
+            { japaneseWord: "プール", kanji: "", englishMeaning: "swimming pool" },
+            { japaneseWord: "フォーク", kanji: "", englishMeaning: "fork" },
+            { japaneseWord: "ふきます", kanji: "", englishMeaning: "blow" },
+            { japaneseWord: "ふく", kanji: "服", englishMeaning: "clothes" },
+            { japaneseWord: "ふたつ", kanji: "二つ", englishMeaning: "two" },
+            { japaneseWord: "ぶたにく", kanji: "", englishMeaning: "pork" },
+            { japaneseWord: "ふたり", kanji: "二人", englishMeaning: "two people" },
+            { japaneseWord: "ふつか", kanji: "二日", englishMeaning: "the second day of the month, two days" },
+            { japaneseWord: "ふとい", kanji: "", englishMeaning: "thick, fat [i-adj.]" },
+            { japaneseWord: "ふゆ", kanji: "冬", englishMeaning: "winter" },
+            { japaneseWord: "ふります", kanji: "", englishMeaning: "fall, come down" },
+            { japaneseWord: "ふるい", kanji: "古い", englishMeaning: "old [i-adj.]" },
+            { japaneseWord: "ふろ", kanji: "", englishMeaning: "bath" },
+            { japaneseWord: "ぶん", kanji: "文", englishMeaning: "sentence" },
+            { japaneseWord: "ぶんしょう", kanji: "", englishMeaning: "text" },
+            { japaneseWord: "ページ", kanji: "", englishMeaning: "page" },
+            { japaneseWord: "へた", kanji: "", englishMeaning: "poor, unskillful [na-adj.]" },
+            { japaneseWord: "ベッド", kanji: "", englishMeaning: "bed" },
+            { japaneseWord: "へや", kanji: "部屋", englishMeaning: "room" },
+            { japaneseWord: "へん", kanji: "", englishMeaning: "side, part" },
+            { japaneseWord: "ペン", kanji: "", englishMeaning: "pen" },
+            { japaneseWord: "べんきょうします", kanji: "", englishMeaning: "study" },
+            { japaneseWord: "べんり", kanji: "", englishMeaning: "convenience [na-adj.]" },
+            { japaneseWord: "ほう", kanji: "", englishMeaning: "side, part" },
+            { japaneseWord: "ぼうし", kanji: "帽子", englishMeaning: "hat, cap" },
+            { japaneseWord: "ボールペン", kanji: "", englishMeaning: "ballpoint pen" },
+            { japaneseWord: "ほか", kanji: "", englishMeaning: "another, other" },
+            { japaneseWord: "ぼく", kanji: "僕", englishMeaning: "I (generally young boys, but some adult use as a style)" },
+            { japaneseWord: "ポケット", kanji: "", englishMeaning: "pocket" },
+            { japaneseWord: "ほしい", kanji: "", englishMeaning: "want (something) [i-adj.]" },
+            { japaneseWord: "ほそい", kanji: "", englishMeaning: "thin, fine [i-adj.]" },
+            { japaneseWord: "ボタン", kanji: "", englishMeaning: "button" },
+            { japaneseWord: "ホテル", kanji: "", englishMeaning: "hotel" },
+            { japaneseWord: "ほん", kanji: "本", englishMeaning: "book" },
+            { japaneseWord: "ほんたな", kanji: "本棚", englishMeaning: "bookshelf" },
+            { japaneseWord: "ほんとう", kanji: "本当", englishMeaning: "really, truth" },
+            { japaneseWord: "ほんや", kanji: "本屋", englishMeaning: "bookshop" },
+            { japaneseWord: "まいあさ", kanji: "毎朝", englishMeaning: "every morning" },
+            { japaneseWord: "まいつき", kanji: "毎月", englishMeaning: "every month" },
+            { japaneseWord: "まいしゅう", kanji: "毎週", englishMeaning: "every week" },
+            { japaneseWord: "まいにち", kanji: "毎日", englishMeaning: "every day" },
+            { japaneseWord: "まいねん", kanji: "毎年", englishMeaning: "every year" },
+            { japaneseWord: "まいばん", kanji: "毎晩", englishMeaning: "every night" },
+            { japaneseWord: "まえ", kanji: "前", englishMeaning: "front" },
+            { japaneseWord: "まがります", kanji: "", englishMeaning: "turn" },
+            { japaneseWord: "まずい", kanji: "", englishMeaning: "nasty, bad-tasting" },
+            { japaneseWord: "また", kanji: "", englishMeaning: "again" },
+            { japaneseWord: "まだ", kanji: "", englishMeaning: "still, yet" },
+            { japaneseWord: "まち", kanji: "", englishMeaning: "town" },
+            { japaneseWord: "まちます", kanji: "", englishMeaning: "wait" },
+            { japaneseWord: "まっすぐ", kanji: "", englishMeaning: "straight [na-adj.]" },
+            { japaneseWord: "マッチ", kanji: "", englishMeaning: "match" },
+            { japaneseWord: "まど", kanji: "", englishMeaning: "window" },
+            { japaneseWord: "まるい", kanji: "", englishMeaning: "round [i-adj.]" },
+            { japaneseWord: "まん", kanji: "万", englishMeaning: "ten thousand" },
+            { japaneseWord: "まんねんひつ", kanji: "万年筆", englishMeaning: "fountain pen" },
+            { japaneseWord: "みがきます", kanji: "", englishMeaning: "polish, brush" },
+            { japaneseWord: "みぎ", kanji: "右", englishMeaning: "right" },
+            { japaneseWord: "みじかい", kanji: "", englishMeaning: "short [i-adj.]" },
+            { japaneseWord: "みず", kanji: "水", englishMeaning: "water" },
+            { japaneseWord: "みせ", kanji: "店", englishMeaning: "store" },
+            { japaneseWord: "みせます", kanji: "見せます", englishMeaning: "show" },
+            { japaneseWord: "みち", kanji: "道", englishMeaning: "way" },
+            { japaneseWord: "みっか", kanji: "三日", englishMeaning: "the third day of month, three days" },
+            { japaneseWord: "みっつ", kanji: "三つ", englishMeaning: "three" },
+            { japaneseWord: "みなさん", kanji: "", englishMeaning: "everyone" },
+            { japaneseWord: "みなみ", kanji: "南", englishMeaning: "south" },
+            { japaneseWord: "みます", kanji: "見ます", englishMeaning: "look, see, watch" },
+            { japaneseWord: "みみ", kanji: "耳", englishMeaning: "ear" },
+            { japaneseWord: "みんな", kanji: "", englishMeaning: "everyone, everything" },
+            { japaneseWord: "むいか", kanji: "六日", englishMeaning: "the sixth day of the month" },
+            { japaneseWord: "むこう", kanji: "", englishMeaning: "over there" },
+            { japaneseWord: "むずかしい", kanji: "", englishMeaning: "difficult [i-adj.]" },
+            { japaneseWord: "むっつ", kanji: "六つ", englishMeaning: "six" },
+            { japaneseWord: "め", kanji: "目", englishMeaning: "eye" },
+            { japaneseWord: "メートル", kanji: "", englishMeaning: "meter" },
+            { japaneseWord: "めがね", kanji: "", englishMeaning: "glasses" },
+            { japaneseWord: "メモ", kanji: "", englishMeaning: "memo" },
+            { japaneseWord: "メモします", kanji: "", englishMeaning: "make a note" },
+            { japaneseWord: "もう", kanji: "", englishMeaning: "already, yet" },
+            { japaneseWord: "もう~", kanji: "", englishMeaning: "... more" },
+            { japaneseWord: "もく", kanji: "木", englishMeaning: "Thursday" },
+            { japaneseWord: "もくようび", kanji: "木曜日", englishMeaning: "Thursday" },
+            { japaneseWord: "もしもし", kanji: "", englishMeaning: "hello (telephone)" },
+            { japaneseWord: "もちろん", kanji: "", englishMeaning: "of course" },
+            { japaneseWord: "もちます", kanji: "", englishMeaning: "have, hold, carry" },
+            { japaneseWord: "もっていきます", kanji: "", englishMeaning: "take (something)" },
+            { japaneseWord: "もっと", kanji: "", englishMeaning: "more" },
+            { japaneseWord: "もの", kanji: "", englishMeaning: "object, thing" },
+            { japaneseWord: "もらいます", kanji: "", englishMeaning: "receive" },
+            { japaneseWord: "もん", kanji: "門", englishMeaning: "gate" },
+            { japaneseWord: "もんだい", kanji: "問題", englishMeaning: "question" },
+            { japaneseWord: "もんだいようし", kanji: "問題用紙", englishMeaning: "question sheet" },
+            { japaneseWord: "もんだいれい", kanji: "問題例", englishMeaning: "sample question" },
+            { japaneseWord: "やさいや", kanji: "", englishMeaning: "vegetable store" },
+            { japaneseWord: "やさい", kanji: "野菜", englishMeaning: "vegetable" },
+            { japaneseWord: "やさしい", kanji: "", englishMeaning: "easy, kind/nice/sweet/gentle [i-adj.]" },
+            { japaneseWord: "やじるし", kanji: "矢印", englishMeaning: "arrow" },
+            { japaneseWord: "やすい", kanji: "安い", englishMeaning: "cheap, inexpensive" },
+            { japaneseWord: "やすみ", kanji: "休み", englishMeaning: "holiday, vacation" },
+            { japaneseWord: "やすみます", kanji: "休みます", englishMeaning: "have a day off, rest, be absent" },
+            { japaneseWord: "やっつ", kanji: "八つ", englishMeaning: "eight" },
+            { japaneseWord: "やま", kanji: "山", englishMeaning: "mountain" },
+            { japaneseWord: "やります", kanji: "", englishMeaning: "do" },
+            { japaneseWord: "ゆうがた", kanji: "夕方", englishMeaning: "early evening" },
+            { japaneseWord: "ゆうびんきょく", kanji: "郵便局", englishMeaning: "post office" },
+            { japaneseWord: "ゆうめい", kanji: "有名", englishMeaning: "famous [na-adj.]" },
+            { japaneseWord: "ゆき", kanji: "雪", englishMeaning: "snow" },
+            { japaneseWord: "ゆっくり", kanji: "ゆっくり", englishMeaning: "slowly" },
+            { japaneseWord: "ようか", kanji: "八日", englishMeaning: "the eight day of the month, eight days" },
+            { japaneseWord: "ようふく", kanji: "洋服", englishMeaning: "(western) clothes" },
+            { japaneseWord: "よく", kanji: "", englishMeaning: "often" },
+            { japaneseWord: "よこ", kanji: "横", englishMeaning: "the side" },
+            { japaneseWord: "よっつ", kanji: "四つ", englishMeaning: "four" },
+            { japaneseWord: "よびます", kanji: "", englishMeaning: "call, invite" },
+            { japaneseWord: "よみます", kanji: "読みます", englishMeaning: "read" },
+            { japaneseWord: "よる", kanji: "夜", englishMeaning: "night" },
+            { japaneseWord: "ラーメン", kanji: "", englishMeaning: "ramen, noodle" },
+            { japaneseWord: "らいげつ", kanji: "来月", englishMeaning: "next month" },
+            { japaneseWord: "らいしゅう", kanji: "来週", englishMeaning: "next week" },
+            { japaneseWord: "らいねん", kanji: "来年", englishMeaning: "next year" },
+            { japaneseWord: "ラジオ", kanji: "", englishMeaning: "radio" },
+            { japaneseWord: "りっぱ", kanji: "", englishMeaning: "good, fine, fine-looking, splendid, magnificent [na-adj.]" },
+            { japaneseWord: "りゅうがくせい", kanji: "留学生", englishMeaning: "student studying abroad" },
+            { japaneseWord: "りょうしん", kanji: "両親", englishMeaning: "parents" },
+            { japaneseWord: "りょうり", kanji: "料理", englishMeaning: "cooking" },
+            { japaneseWord: "りょこうがいしゃ", kanji: "旅行会社", englishMeaning: "travel agency" },
+            { japaneseWord: "りょこうします", kanji: "", englishMeaning: "travel" },
+            { japaneseWord: "りんご", kanji: "林檎", englishMeaning: "apple" },
+            { japaneseWord: "れい", kanji: "例", englishMeaning: "example" },
+            { japaneseWord: "れいぞうこ", kanji: "冷蔵庫", englishMeaning: "refrigerator" },
+            { japaneseWord: "レコード", kanji: "", englishMeaning: "record" },
+            { japaneseWord: "レストラン", kanji: "", englishMeaning: "restaurant" },
+            { japaneseWord: "れんしゅう", kanji: "練習", englishMeaning: "practice" },
+            { japaneseWord: "れんしゅうします", kanji: "", englishMeaning: "practice" },
+            { japaneseWord: "ろく", kanji: "六", englishMeaning: "six" },
+            { japaneseWord: "ろっぽん", kanji: "六本", englishMeaning: "six (long objects)" },
+            { japaneseWord: "ワイシャツ", kanji: "", englishMeaning: "business shirt (white shirt)" },
+            { japaneseWord: "わかい", kanji: "", englishMeaning: "young [i-adj.]" },
+            { japaneseWord: "わかります", kanji: "", englishMeaning: "understand, know" },
+            { japaneseWord: "わすれます", kanji: "", englishMeaning: "forget" },
+            { japaneseWord: "わたし", kanji: "私", englishMeaning: "I" },
+            { japaneseWord: "わたします", kanji: "", englishMeaning: "hand over" },
+            { japaneseWord: "わたります", kanji: "", englishMeaning: "cross" },
+            { japaneseWord: "わるい", kanji: "", englishMeaning: "bad [i-adj.]" },
+            { japaneseWord: "あ", kanji: "", englishMeaning: "Ah!, Oh!" },
+            { japaneseWord: "ああ", kanji: "", englishMeaning: "Ah!" },
+            { japaneseWord: "あの", kanji: "", englishMeaning: "Well, Let me see." },
+            { japaneseWord: "あのう", kanji: "", englishMeaning: "Excuse me., Well, Let me see." },
+            { japaneseWord: "ありがとう ございます。", kanji: "有難うございます。", englishMeaning: "Thank you very much." },
+            { japaneseWord: "いいえ。", kanji: "", englishMeaning: "No" },
+            { japaneseWord: "いえ。", kanji: "", englishMeaning: "No" },
+            { japaneseWord: "いただきます。", kanji: "", englishMeaning: "Let's eat! (saying this before having a meal.)" },
+            { japaneseWord: "いってきます。", kanji: "", englishMeaning: "I am going., I am leaving." },
+            { japaneseWord: "いらっしゃいませ。", kanji: "", englishMeaning: "May I help you? (at restaurant, shop)" },
+            { japaneseWord: "うーん", kanji: "", englishMeaning: "Well, Let me see." },
+            { japaneseWord: "え", kanji: "", englishMeaning: "Oh! = ええ。" },
+            { japaneseWord: "ええ", kanji: "", englishMeaning: "Yes." },
+            { japaneseWord: "えー", kanji: "", englishMeaning: "Well, Let me see." },
+            { japaneseWord: "ええ", kanji: "", englishMeaning: "Oh! = え。" },
+            { japaneseWord: "おげんきで。", kanji: "", englishMeaning: "Take care of yourself." },
+            { japaneseWord: "おねがいします。", kanji: "", englishMeaning: "Please." },
+            { japaneseWord: "おはようございます。", kanji: "", englishMeaning: "Good morning." },
+            { japaneseWord: "おやすみなさい。", kanji: "", englishMeaning: "Good night." },
+            { japaneseWord: "ください。", kanji: "", englishMeaning: "Please give me." },
+            { japaneseWord: "ごちそうさまでした。", kanji: "", englishMeaning: "I've enjoyed my meal very much. Thank you. (saying this after having a meal.)" },
+            { japaneseWord: "こちらこそ。", kanji: "", englishMeaning: "It is me, not you that ..." },
+            { japaneseWord: "ごめんください。", kanji: "", englishMeaning: "Hello!, May I come in?" },
+            { japaneseWord: "ごめんなさい。", kanji: "", englishMeaning: "Sorry." },
+            { japaneseWord: "こんにちは。", kanji: "", englishMeaning: "Good morning., Good afternoon., Hello." },
+            { japaneseWord: "こんばんは。", kanji: "", englishMeaning: "Good evening." },
+            { japaneseWord: "さあ…", kanji: "", englishMeaning: "Well ..." },
+            { japaneseWord: "さようなら。", kanji: "", englishMeaning: "Goodbye." },
+            { japaneseWord: "しつれいしました。", kanji: "", englishMeaning: "I am sorry. (I am sorry to have been rude.)" },
+            { japaneseWord: "しつれいします。", kanji: "", englishMeaning: "Excuse me." },
+            { japaneseWord: "じゃ", kanji: "", englishMeaning: "then, well, well then, if so, in the case." },
+            { japaneseWord: "じゃあ", kanji: "", englishMeaning: "then, well, well then, if so, in the case." },
+            { japaneseWord: "すみません。", kanji: "", englishMeaning: "Excuse me." },
+            { japaneseWord: "そうしましょう。", kanji: "", englishMeaning: "Let's do it." },
+            { japaneseWord: "そうです。", kanji: "", englishMeaning: "That's right." },
+            { japaneseWord: "そうですか。", kanji: "", englishMeaning: "I see." },
+            { japaneseWord: "そうですね。", kanji: "", englishMeaning: "Oh right., Well ..." },
+            { japaneseWord: "ただいま。", kanji: "", englishMeaning: "I'm home., I'm back." },
+            { japaneseWord: "では、また。", kanji: "", englishMeaning: "Well then, see you again." },
+            { japaneseWord: "どういたしまして。", kanji: "", englishMeaning: "You are welcome., Not at all." },
+            { japaneseWord: "どうぞ。", kanji: "", englishMeaning: "Please." },
+            { japaneseWord: "どうも。", kanji: "", englishMeaning: "Thanks." },
+            { japaneseWord: "どうもありがとう。", kanji: "", englishMeaning: "Thanks a lot." },
+            { japaneseWord: "はい。", kanji: "", englishMeaning: "Yes." },
+            { japaneseWord: "はじめまして。", kanji: "", englishMeaning: "Nice to see you." },
+            { japaneseWord: "よろしくおねがいします。", kanji: "", englishMeaning: "(Please favor me.)" }
+        ];
+
+        let currentQuestion = {};
+        let score = 0;
+        let totalQuestions = 0;
+        let askedQuestions = new Set(); // To keep track of asked questions
+        const MAX_QUESTIONS = 50; // Limit the number of questions per quiz session
+
+        const japaneseWordEl = document.getElementById('japanese-word');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackEl = document.getElementById('feedback');
+        const scoreDisplayEl = document.getElementById('score-display');
+        const nextButton = document.getElementById('next-button');
+        const restartButton = document.getElementById('restart-button');
+        const messageModal = document.getElementById('message-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseButton = document.getElementById('modal-close-button');
+        const readWordButton = document.getElementById('read-word-button');
+        const toggleVoiceButton = document.getElementById('toggle-voice-button');
+
+        let speechSynth = window.speechSynthesis;
+        let voices = [];
+        let nanamiVoice = null;
+        let keitaVoice = null;
+        let currentVoice = null; // Stores the currently active voice
+
+        // Utility function to shuffle an array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Function to show a custom modal message
+        function showMessage(title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            messageModal.classList.remove('hidden');
+        }
+
+        // Function to hide the custom modal
+        function hideMessage() {
+            messageModal.classList.add('hidden');
+        }
+
+        // Populate voices and set default/toggle options
+        function setupVoices() {
+            voices = speechSynth.getVoices().filter(voice => voice.lang.startsWith('ja')); // Filter for Japanese voices
+
+            if (voices.length === 0) {
+                readWordButton.disabled = true;
+                toggleVoiceButton.disabled = true;
+                showMessage('Speech Synthesis Warning', 'No Japanese voices available. Text-to-speech may not work as expected.');
+                return;
+            }
+
+            // Find Nanami and Keita voices
+            nanamiVoice = voices.find(voice => voice.name.includes('Nanami'));
+            keitaVoice = voices.find(voice => voice.name.includes('Keita'));
+
+            // Set initial voice: Prefer Nanami, then Keita, then any Japanese voice
+            if (keitaVoice) {
+                currentVoice = keitaVoice;
+                toggleVoiceButton.textContent = 'Switch Voice (Nanami)';
+            } else if (nanamiVoice) {
+                currentVoice = nanamiVoice;
+                toggleVoiceButton.textContent = 'Switch Voice (Keita)';
+            } else {
+                currentVoice = voices[0];
+                toggleVoiceButton.textContent = 'Switch Voice';
+                showMessage('Voice Setup', 'Nanami or Keita voices not found. Using the first available Japanese voice.');
+            }
+
+            readWordButton.disabled = false;
+            toggleVoiceButton.disabled = false;
+        }
+
+        // Speak the Japanese word using the current voic
+        function speakJapaneseWord(text) {
+            if (speechSynth.speaking) {
+                speechSynth.cancel(); // Stop any ongoing speech
+            }
+
+            if (!currentVoice) {
+                console.error("No voice selected or available.");
+                showMessage('Audio Error', 'No Japanese voice is available to play the sound.');
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ja-JP'; // Set language to Japanese
+            utterance.voice = currentVoice; // Use the currently selected voice
+
+            speechSynth.speak(utterance);
+        }
+
+        // Toggles between Nanami and Keita voices
+        function toggleVoice() {
+            if (!nanamiVoice && !keitaVoice) {
+                showMessage('Voice Error', 'Neither Nanami nor Keita voices are available to switch between.');
+                return;
+            }
+
+            if (currentVoice === nanamiVoice && keitaVoice) {
+                currentVoice = keitaVoice;
+                toggleVoiceButton.textContent = 'Switch Voice (Nanami)';
+            } else if (currentVoice === keitaVoice && nanamiVoice) {
+                currentVoice = nanamiVoice;
+                toggleVoiceButton.textContent = 'Switch Voice (Keita)';
+            } else if (nanamiVoice) { // If current is neither, or only Nanami is available
+                currentVoice = nanamiVoice;
+                toggleVoiceButton.textContent = 'Switch Voice (Keita)';
+            } else if (keitaVoice) { // If only Keita is available
+                currentVoice = keitaVoice;
+                toggleVoiceButton.textContent = 'Switch Voice (Nanami)';
+            }
+            console.log("Current voice switched to:", currentVoice ? currentVoice.name : "None");
+            // Optionally, speak a test word in the new voice
+            speakJapaneseWord("こんにちは"); // Konnichiwa
+        }
+
+        // Generates a new question
+        function generateQuestion() {
+            if (totalQuestions >= MAX_QUESTIONS || askedQuestions.size === vocabularyData.length) {
+                showMessage('Quiz Finished!', `You scored ${score} out of ${totalQuestions} questions. Great job!`);
+                nextButton.disabled = true;
+                return;
+            }
+
+            // Clear previous feedback and options
+            feedbackEl.textContent = '';
+            optionsContainer.innerHTML = '';
+            nextButton.disabled = true;
+
+            let questionIndex;
+            do {
+                questionIndex = Math.floor(Math.random() * vocabularyData.length);
+            } while (askedQuestions.has(questionIndex)); // Ensure unique questions
+
+            askedQuestions.add(questionIndex);
+            currentQuestion = vocabularyData[questionIndex];
+            totalQuestions++;
+
+            // Display the Japanese word (and Kanji if available)
+            const displayWord = currentQuestion.japaneseWord + (currentQuestion.kanji ? ` (${currentQuestion.kanji})` : '');
+            japaneseWordEl.textContent = displayWord;
+
+            // Automatically read the word
+            speakJapaneseWord(currentQuestion.japaneseWord);
+
+            // Prepare options (1 correct, 3 distractors)
+            let options = [currentQuestion.englishMeaning];
+            let distractors = vocabularyData
+                .filter(word => word.englishMeaning !== currentQuestion.englishMeaning)
+                .map(word => word.englishMeaning);
+
+            // Select 3 unique distractors
+            shuffleArray(distractors);
+            options = options.concat(distractors.slice(0, 3));
+            shuffleArray(options); // Shuffle all options
+
+            // Create option buttons
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('option-button');
+                button.addEventListener('click', () => checkAnswer(button, option));
+                optionsContainer.appendChild(button);
+            });
+
+            updateScoreDisplay();
+        }
+
+        // Checks the selected answer
+        function checkAnswer(selectedButton, selectedOption) {
+            // Disable all option buttons after selection
+            Array.from(optionsContainer.children).forEach(button => {
+                button.disabled = true;
+            });
+
+            if (selectedOption === currentQuestion.englishMeaning) {
+                feedbackEl.textContent = 'Correct!';
+                selectedButton.classList.add('correct');
+                score++;
+            } else {
+                feedbackEl.textContent = `Incorrect. The correct answer was: "${currentQuestion.englishMeaning}".`;
+                selectedButton.classList.add('incorrect');
+                // Highlight the correct answer
+                Array.from(optionsContainer.children).forEach(button => {
+                    if (button.textContent === currentQuestion.englishMeaning) {
+                        button.classList.add('correct');
+                    }
+                });
+            }
+            nextButton.disabled = false; // Enable next question button
+            updateScoreDisplay();
+        }
+
+        // Updates the score display
+        function updateScoreDisplay() {
+            scoreDisplayEl.textContent = `Score: ${score} / ${totalQuestions}`;
+        }
+
+        // Restarts the quiz
+        function restartQuiz() {
+            score = 0;
+            totalQuestions = 0;
+            askedQuestions.clear();
+            generateQuestion();
+        }
+
+        // Event listeners for control buttons
+        nextButton.addEventListener('click', generateQuestion);
+        restartButton.addEventListener('click', restartQuiz);
+        readWordButton.addEventListener('click', () => speakJapaneseWord(currentQuestion.japaneseWord));
+        toggleVoiceButton.addEventListener('click', toggleVoice); // New event listener for voice toggle
+
+        // Event listener for modal close button
+        modalCloseButton.addEventListener('click', hideMessage);
+
+        // Initial setup for speech synthesis
+        speechSynth.onvoiceschanged = setupVoices; // Setup voices when they are loaded
+
+        // Initial question generation on page load
+        window.onload = () => {
+            if ('speechSynthesis' in window) {
+                setupVoices(); // Try to setup voices immediately
+            } else {
+                readWordButton.disabled = true;
+                toggleVoiceButton.disabled = true;
+                showMessage('Browser Support', 'Your browser does not support Web Speech API. Audio feature will not be available.');
+            }
+            generateQuestion();
+        };
+    </script>
+</body>
+</html>
