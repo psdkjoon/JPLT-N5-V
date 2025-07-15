@@ -1047,7 +1047,7 @@
         let score = 0;
         let totalQuestions = 0;
         let askedQuestions = new Set(); // To keep track of asked questions
-        const MAX_QUESTIONS = 50; // Limit the number of questions per quiz session
+        const MAX_QUESTIONS = 20; // Limit the number of questions per quiz session
 
         const japaneseWordEl = document.getElementById('japanese-word');
         const optionsContainer = document.getElementById('options-container');
@@ -1105,15 +1105,15 @@
             keitaVoice = voices.find(voice => voice.name.includes('Keita'));
 
             // Set initial voice: Prefer Nanami, then Keita, then any Japanese voice
-            if (keitaVoice) {
-                currentVoice = keitaVoice;
-                toggleVoiceButton.textContent = 'Switch Voice (Nanami)';
-            } else if (nanamiVoice) {
+            if (nanamiVoice) {
                 currentVoice = nanamiVoice;
-                toggleVoiceButton.textContent = 'Switch Voice (Keita)';
+                toggleVoiceButton.textContent = 'Switch Voice (Keita)'; // Next will be Keita
+            } else if (keitaVoice) {
+                currentVoice = keitaVoice;
+                toggleVoiceButton.textContent = 'Switch Voice (Nanami)'; // Next will be Nanami
             } else {
-                currentVoice = voices[0];
-                toggleVoiceButton.textContent = 'Switch Voice';
+                currentVoice = voices[0]; // Fallback to first available Japanese voice
+                toggleVoiceButton.textContent = 'Switch Voice'; // Generic text if specific voices not found
                 showMessage('Voice Setup', 'Nanami or Keita voices not found. Using the first available Japanese voice.');
             }
 
@@ -1121,7 +1121,7 @@
             toggleVoiceButton.disabled = false;
         }
 
-        // Speak the Japanese word using the current voic
+        // Speak the Japanese word using the current voice
         function speakJapaneseWord(text) {
             if (speechSynth.speaking) {
                 speechSynth.cancel(); // Stop any ongoing speech
@@ -1225,11 +1225,11 @@
             });
 
             if (selectedOption === currentQuestion.englishMeaning) {
-                feedbackEl.textContent = 'Correct!';
+                feedbackEl.textContent = 'Correct! よくできました！ (Yoku dekimashita!)';
                 selectedButton.classList.add('correct');
                 score++;
             } else {
-                feedbackEl.textContent = `Incorrect. The correct answer was: "${currentQuestion.englishMeaning}".`;
+                feedbackEl.textContent = `Incorrect. The correct answer was: "${currentQuestion.englishMeaning}". 残念でしたね！ (Zannen deshita ne!)`;
                 selectedButton.classList.add('incorrect');
                 // Highlight the correct answer
                 Array.from(optionsContainer.children).forEach(button => {
